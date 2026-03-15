@@ -1,152 +1,98 @@
-# AdBook Backend 🚀
+# AdBook Бэкенд
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-5.x-092E20)](https://www.djangoproject.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED)](https://www.docker.com/)
+Производственный Django REST API бэкенд для AdBook — социальной платформы для книг, заметок и рецензий (похожей на Instagram для любителей книг).
 
-**AdBook** - Production-grade Instagram-like social platform for **books**, scaling to **1M users**.
+## Функции
 
-## ✨ Features
-- 📚 Books catalog + reviews
-- 📱 Posts, comments, likes
-- 👥 Followers/subscriptions
-- 💬 Real-time chat (WebSockets)
-- 🔔 Push notifications (WebSockets)
-- 🎯 Personalized feed
-- 🔍 Full-text search (PostgreSQL)
-- 🔐 Advanced auth: JWT, OTP, 2FA, device tracking
-- ⚡ Scalable: Redis cache, Celery tasks, read replicas ready
+- 🔐 **Аутентификация** — JWT с регистрацией, входом, выходом
+- 📚 **Книги** — CRUD книг с обложками и рецензиями
+- 📝 **Посты/Заметки** — текстовые посты с изображениями
+- 💬 **Комментарии** — вложенные комментарии к книгам/постам
+- ❤️ **Лайки** — универсальная система лайков
+- 👥 **Подписки** — подписка/отписка от пользователей
+- 📂 **Коллекции** — личные коллекции книг/постов
+- 🔔 **Уведомления** — реального времени (WebSocket)
+- 💭 **Чат** — личные сообщения (WebSocket)
+- 📱 **Лента** — персонализированная от подписок
+- 🔍 **Поиск** — полнотекстовый по пользователям/книгам
 
-## 🏗️ Architecture
+## Технологический стек
+
 ```
-Clean Architecture | 12 Modular Django Apps:
-├── accounts (Auth + Profiles)
-├── books          | posts (w/ images)
-├── comments       | likes
-├── subscriptions  | collections
-├── notifications  | chat (Channels)
-├── feed           | search
-└── core (Shared)
+Backend: Django 5 + DRF + Celery + Channels
+DB: PostgreSQL (GIN search, partitioning)
+Cache: Redis 7
+WebSocket: Django Channels
+Server: Gunicorn + Nginx
+DevOps: Docker Compose
 ```
-**ER Schema**: 20+ tables w/ optimized indexes.
 
-## 🚀 Quick Start (Docker)
+## 📁 Структура проекта
 
-### 1. Clone & Setup
+```
+adbook-backend/
+├── apps/
+│   ├── accounts/           # Пользователи, JWT, Profile, OTP
+│   ├── books/              # Книги + рецензии
+│   ├── posts/              # Посты + изображения
+│   ├── comments/           # Комментарии
+│   ├── likes/              # Лайки
+│   ├── subscriptions/      # Подписки
+│   ├── collections/        # Коллекции
+│   ├── notifications/      # Уведомления
+│   ├── chat/               # Чат WebSocket
+│   ├── feed/               # Лента
+│   └── search/             # Поиск
+├── config/                 # Django настройки (dev/prod)
+├── core/                   # Базовые модели/utils
+├── docker-compose.yml      # Docker (Postgres+Redis+Web+Nginx)
+├── Dockerfile              # Django app container
+├── nginx.conf              # Production nginx
+├── requirements.txt        # Все зависимости
+├── manage.py
+└── media/                  # User uploads
+```
+
+## 🚀 Быстрый старт
+
 ```bash
-cd /Users/adylbek/Desktop/backend_adbook/adbook-backend
+cd adbook-backend
+# venv + pip install -r requirements.txt (уже сделано)
+python3 manage.py migrate
+python3 manage.py createsuperuser
+python3 manage.py runserver
+```
+
+**Admin:** `http://127.0.0.1:8000/admin/`
+**API Docs:** `http://127.0.0.1:8000/api/v1/schema/swagger-ui/`
+
+## 📱 API Endpoints для фронтенда
+
+```
+Auth: POST /api/v1/register/ | /login/
+Books: GET/POST /api/v1/books/
+Posts: GET/POST /api/v1/posts/
+Profile: GET /api/v1/accounts/me/
+Follow: POST /api/v1/subscriptions/{id}/follow/
+Chat WS: ws://localhost:8000/ws/chat/
+Notifications WS: ws://localhost:8000/ws/notifications/
+```
+
+## 🐳 Production Docker
+
+```bash
 cp .env.example .env
-# Edit .env: DATABASE_PASSWORD=1406
+docker compose up --build -d
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createsuperuser
 ```
 
-### 2. Launch
-```bash
-docker-compose up --build
-# Backend: http://127.0.0.1:8000
-# Admin: http://127.0.0.1:8000/admin/
-```
+## ✅ Готов к деплою и фронтенду!
 
-### 3. Migrations & Superuser
-```bash
-docker-compose exec backend python manage.py migrate
-docker-compose exec backend python manage.py createsuperuser
-```
+**Фронтенд инструкция:**
+1. `npm create vite@latest frontend`
+2. `axios.defaults.baseURL = 'http://localhost:8000/api/v1/'`
+3. JWT auth + WebSocket (socket.io-client)
+4. Swagger UI для теста endpoints
 
-### 4. API Base
-```
-Authorization: Bearer YOUR_JWT_TOKEN
-Base URL: http://127.0.0.1:8000/api/v1/
-Docs: /api/v1/schema/swagger-ui/ (DRF-Spectacular)
-```
-
-**Auth Flow**:
-```bash
-# Register
-curl -X POST http://127.0.0.1:8000/api/v1/accounts/register/ \
-  -H "Content-Type: application/json" \
-  -d '{"email": "user@example.com", "password": "pass123", "name": "User"}'
-
-# Login
-curl -X POST http://127.0.0.1:8000/api/v1/accounts/login/ \
-  -d '{"email": "user@example.com", "password": "pass123"}'
-```
-
-### 5. Key Endpoints
-```
-GET  /api/v1/posts/                    # Personalized feed
-POST /api/v1/posts/                    # Create post
-GET  /api/v1/feed/                     # Global feed
-WS   ws://127.0.0.1:8000/ws/chat/1/    # Chat room
-GET  /api/v1/search/?q=python          # Full-text search
-```
-
-## 🔧 Production Deployment (Linux Server)
-```bash
-# 1. Build & push images
-docker-compose -f docker-compose.prod.yml build
-docker push your-registry/adbook-backend:latest
-
-# 2. Deploy
-ssh user@prod-server
-docker-compose -f docker-compose.prod.yml up -d
-
-# 3. Scaling
-docker-compose up -d --scale backend=4 worker=2
-```
-
-## 📊 Scalability (1M Users)
-- **Horizontal**: Gunicorn 4+ workers, Nginx LB
-- **DB**: PostgreSQL read replicas + PgBouncer
-- **Cache**: Redis Cluster
-- **Media**: S3 + CDN (CloudFront ready)
-- **Async**: Celery distributed tasks
-- **Monitoring**: Ready for Prometheus/Grafana
-
-## 🛠️ Local Development
-```bash
-# Dev mode (hot reload)
-docker-compose -f docker-compose.dev.yml up
-
-# Run tests
-docker-compose exec backend pytest
-
-# Celery worker
-docker-compose up worker
-
-# Channels dev server
-docker-compose exec backend python manage.py runserver 0.0.0.0:8000
-```
-
-## 📄 API Documentation
-Auto-generated Swagger: `http://127.0.0.1:8000/api/v1/schema/swagger-ui/`
-
-## 🔒 Security
-- ✅ JWT + Redis token blacklist
-- ✅ Rate limiting + throttling
-- ✅ CORS/CSRF protection
-- ✅ SQL/XSS injection safe
-- ✅ HTTPS ready (Let's Encrypt)
-
-## 🏷️ Tech Stack
-```
-Backend: Django 5 + DRF + Channels 4
-DB: PostgreSQL 16 + Redis 7
-Queue: Celery 5.4
-Server: Gunicorn 22 + Nginx 1.26
-Infra: Docker Compose + S3
-Search: PostgreSQL GIN/Full-Text
-```
-
-## 🤝 Contributing
-1. Fork → Clone → `docker-compose up`
-2. Create feature branch: `git checkout -b feature/books-api`
-3. PR to `develop` branch
-
-## 📞 Support
-- Issues: GitHub Issues
-- Discord/Slack: [TBD]
-
----
-**Made with ❤️ for book lovers** | Scales to **1M+ users** 🚀
-
+**Лицензия:** MIT
