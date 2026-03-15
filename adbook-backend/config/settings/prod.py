@@ -1,4 +1,12 @@
 from .base import *
+from decouple import config
+
+# безопасно обрабатывать пустой список
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()]
+)
 
 DEBUG = False
 
