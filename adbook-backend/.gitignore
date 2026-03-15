@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Env
+.env
+*.env
+
+# DB
+*.sqlite3
+db.sqlite3
+
+# Media
+media/
+staticfiles/
+
+# Docker
+.dockerignore
+
+# Migrations (regenerate if needed)
+**/migrations/0*.py
+
+# Celery
+celerybeat-schedule
+celery.pid
+
+# Coverage
+.coverage
+htmlcov/
+
